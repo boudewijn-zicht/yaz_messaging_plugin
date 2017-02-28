@@ -41,7 +41,8 @@ controller:
             caller = self.get_caller([Messaging])
             caller("cleanup", "--changes-strategy", "overwrite", "--duplicate-key-strategy", "first")
 
-            self.assertEqual(expected, open(file_path, "r").read())
+            with open(file_path, "r") as file:
+                self.assertEqual(expected, file.read())
 
     def test_020_cleanup__overwrite__last(self):
         content = """
@@ -72,4 +73,5 @@ controller:
             caller = self.get_caller([Messaging])
             caller("cleanup", "--changes-strategy", "overwrite", "--duplicate-key-strategy", "last")
 
-            self.assertEqual(expected, open(file_path, "r").read())
+            with open(file_path, "r") as file:
+                self.assertEqual(expected, file.read())

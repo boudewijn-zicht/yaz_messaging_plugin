@@ -1,6 +1,0 @@
-# hard requirements
-yaz
-
-# development requirements
-nose
-coverage

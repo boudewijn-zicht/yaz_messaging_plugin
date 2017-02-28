@@ -10,6 +10,8 @@ setup(name="yaz_messaging_plugin",
       license="MIT",
       zip_safe=False,
       install_requires=["yaz", "pyyaml"],
+      test_suite="nose.collector",
+      tests_require=["nose"],
       classifiers=[
           "Development Status :: 4 - Beta",
           "Environment :: Console",
