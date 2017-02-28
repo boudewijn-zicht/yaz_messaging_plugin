@@ -87,7 +87,8 @@ class Messaging(yaz.BasePlugin):
         print(messages)
         buffer = io.StringIO()
         yaml.dump(messages, buffer, default_flow_style=False, width=1024 * 5, indent=indent)
-        requires_changes = buffer.read() != open(file, "r").read()
+        with open(file, "r") as file_handle:
+            requires_changes = buffer.read() != file_handle.read()
 
         if requires_changes:
             buffer.seek(0)
@@ -101,12 +102,13 @@ class Messaging(yaz.BasePlugin):
                         print("###", line)
                         output.write(line)
             if strategy == "ask":
-                diff = difflib.context_diff(
-                    open(file, "r").readlines(),
-                    buffer.readlines(),
-                    "original {}".format(file),
-                    "proposed {}".format(file)
-                )
+                with open(file, "r") as file_handle:
+                    diff = difflib.context_diff(
+                        file_handle.readlines(),
+                        buffer.readlines(),
+                        "original {}".format(file),
+                        "proposed {}".format(file)
+                    )
                 for line in diff:
                     print(line.rstrip())
                 raise NotImplementedError("todo: implement syntax_changes_strategy=\"ask\" strategy")
@@ -214,7 +216,8 @@ class Messaging(yaz.BasePlugin):
 
             return messages
 
-        return recursion(collections.defaultdict(list), "", yaml.load(open(file, "r"), OrderedDictLoader))
+        with open(file, "r") as file_handle:
+            return recursion(collections.defaultdict(list), "", yaml.load(file_handle, OrderedDictLoader))
 
     def get_message_files(self):
         """Iterate over available message files grouped by directory and domain"""
