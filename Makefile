@@ -1,8 +1,8 @@
 init:
-    pip3 install -r requirements.txt
+	pip install -r requirements.txt
 
 test:
-    nosetests --with-coverage --cover-html --cover-package yaz_messaging_plugin
+	nosetests --with-coverage --cover-html --cover-package yaz_messaging_plugin
 
 upload: test
 	python setup.py sdist upload -r pypi
