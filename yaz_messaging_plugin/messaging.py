@@ -22,30 +22,34 @@ class Messaging(yaz.BasePlugin):
 
     @yaz.task
     def check(self, depth: int = 666, indent: int = 4):
-        return self.cleanup(syntax_changes_strategy="fail", duplicate_key_strategy="fail", sync_strategy="fail", depth_strategy="fail", depth=depth, indent=indent)
+        return self.cleanup(changes="fail", duplicate="fail", sync="fail", depth="fail", max_depth=depth, indent_length=indent)
 
-    @yaz.task(changes_strategy__choices=["overwrite", "ask", "fail"],
-              duplicate_key_strategy__choices=["first", "last", "ask", "fail"],
-              sync_strategy__choices=["use-key", "ask", "ignore", "fail"],
-              depth_strategy__choices=["join", "ask", "fail"])
-    def cleanup(self, changes_strategy="ask", duplicate_key_strategy="ask", sync_strategy="ask", depth_strategy="ask", depth=666, indent=4):
+    @yaz.task(changes__choices=["ask", "overwrite", "fail"],
+              duplicate__choices=["ask", "first", "last", "fail"],
+              sync__choices=["ask", "use-key", "ignore", "fail"],
+              depth__choices=["ask", "join", "fail"])
+    def cleanup(self, changes="ask", duplicate="ask", sync="ask", depth="ask", max_depth: int = 666, indent_length: int = 4):
         for domain, files in self.get_message_files():
             domains = {}
+
+            # Resolve duplicates
             for file in files:
                 logger.debug("%s %s", domain, files)
                 messages = self.get_messages_from_file(file)
-                print(messages)
-                domains[file] = self.resolve_duplicate_keys(duplicate_key_strategy, messages)
+                domains[file] = self.resolve_duplicate_keys(duplicate, messages)
 
-            print(domains)
-            domains = self.resolve_message_sync(sync_strategy, domains)
+            # Resolve sync
+            domains = self.resolve_message_sync(sync, domains)
 
+            # Resolve depth
             for file, messages in domains.items():
-                try:
-                    messages = self.resolve_message_depth(depth_strategy, depth, messages)
-                except Exception as error:
-                    raise RuntimeError("{} in file {}".format(error, file))
-                self.resolve_changes(changes_strategy, file, messages, indent)
+                # try:
+                messages = self.resolve_message_depth(depth, max_depth, messages)
+                # except Exception as error:
+                #     raise RuntimeError("{} in file {}".format(error, file))
+
+                # Resolve changes
+                self.resolve_changes(changes, file, messages, indent_length)
 
         return None
 
@@ -74,17 +78,19 @@ class Messaging(yaz.BasePlugin):
         if strategy == "fail":
             for key, value in messages.items():
                 if len(value) > 1:
-                    raise RuntimeError("translatable \"{}\" has multiple possible values: \"{}\"".format(key, value))
+                    raise RuntimeError("Translatable \"{}\" has multiple possible values \"{}\"".format(key, value))
             return dict((key, value[0]) for key, value in messages.items())
-        if strategy == "first":
+        elif strategy == "first":
             return dict((key, value[0]) for key, value in messages.items())
-        if strategy == "last":
+        elif strategy == "last":
             return dict((key, value[-1]) for key, value in messages.items())
-        if strategy == "ask":
-            raise NotImplementedError("todo: implement duplicate_strategy=\"ask\" strategy")
+        elif strategy == "ask":
+            for key, value in messages.items():
+                if len(value) > 1:
+                    raise NotImplementedError("todo: implement duplicate_strategy=\"ask\" strategy")
+            return dict((key, value[0]) for key, value in messages.items())
 
     def resolve_changes(self, strategy, file, messages, indent):
-        print(messages)
         buffer = io.StringIO()
         yaml.dump(messages, buffer, default_flow_style=False, width=1024 * 5, indent=indent)
         with open(file, "r") as file_handle:
@@ -99,7 +105,6 @@ class Messaging(yaz.BasePlugin):
             if strategy == "overwrite":
                 with open(file, "w") as output:
                     for line in buffer.readlines():
-                        print("###", line)
                         output.write(line)
             if strategy == "ask":
                 with open(file, "r") as file_handle:
@@ -114,6 +119,7 @@ class Messaging(yaz.BasePlugin):
                 raise NotImplementedError("todo: implement syntax_changes_strategy=\"ask\" strategy")
 
     def resolve_message_depth(self, strategy, depth, messages):
+        assert isinstance(strategy, str), type(strategy)
         assert isinstance(depth, int), type(depth)
         assert isinstance(messages, dict), type(dict)
         assert all(isinstance(key, str) for key in messages.keys())
@@ -144,7 +150,7 @@ class Messaging(yaz.BasePlugin):
                         continue
 
                     if strategy == "fail":
-                        raise RuntimeError("conflicting keys when expanding path \"{}\"".format(".".join(keys)))
+                        raise RuntimeError("Conflicting keys when expanding path \"{}\"".format(".".join(keys)))
 
             key = keys[-1]
             if prefix:
@@ -173,7 +179,7 @@ class Messaging(yaz.BasePlugin):
         if strategy == "fail":
             for file, messages in domains.items():
                 for key in all_keys.difference(messages.keys()):
-                    raise RuntimeError("translatable \"{}\" is not set in \"{}\"".format(key, file))
+                    raise RuntimeError("Translatable \"{}\" is not set in \"{}\"".format(key, file))
 
         domains = copy.deepcopy(domains)
         if strategy == "use-key":
