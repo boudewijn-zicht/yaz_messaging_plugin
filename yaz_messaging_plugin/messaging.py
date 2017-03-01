@@ -24,6 +24,10 @@ class Messaging(yaz.BasePlugin):
     def check(self, depth: int = 666, indent: int = 4):
         return self.cleanup(changes="fail", duplicate="fail", sync="fail", depth="fail", max_depth=depth, indent_length=indent)
 
+    @yaz.task
+    def fix(self, depth: int = 666, indent: int = 4):
+        return self.cleanup(changes="overwite", duplicate="first", sync="use-key", depth="join", max_depth=depth, indent_length=indent)
+
     @yaz.task(changes__choices=["ask", "overwrite", "fail"],
               duplicate__choices=["ask", "first", "last", "fail"],
               sync__choices=["ask", "use-key", "ignore", "fail"],

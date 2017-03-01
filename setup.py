@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(name="yaz_messaging_plugin",
       packages=["yaz_messaging_plugin"],
-      version="1.0.0",
+      version="1.0.1",
       description="A symfony message translation plugin for YAZ",
       author="Boudewijn Schoon",
       author_email="boudewijn@zicht.nl",
@@ -10,6 +10,7 @@ setup(name="yaz_messaging_plugin",
       license="MIT",
       zip_safe=False,
       install_requires=["yaz", "pyyaml"],
+      scripts=["bin/yaz-messaging"],
       test_suite="nose.collector",
       tests_require=["nose"],
       classifiers=[
