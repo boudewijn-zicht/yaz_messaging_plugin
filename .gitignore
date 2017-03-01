@@ -1,3 +1,5 @@
 *~
+.idea/
 __pycache__
+env/
 yaz_messaging_plugin.egg-info
