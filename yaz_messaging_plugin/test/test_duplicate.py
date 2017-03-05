@@ -1,3 +1,4 @@
+import yaz
 from .tester import TestCase
 
 
@@ -42,5 +43,6 @@ controller:
         self.assertEqual(expected, self.get_file_content("duplicate_keys.nl.yml"))
 
     def test_030_cleanup__fail(self):
-        args = (self.get_caller(), "cleanup", "--duplicate", "fail")
-        self.assertRaisesRegex(RuntimeError, r"Translatable .* has multiple possible values .*", *args)
+        caller = self.get_caller()
+        with self.assertRaisesRegex(yaz.Error, r"Translatable .* has multiple possible values .*"):
+            caller("cleanup", "--duplicate", "fail")

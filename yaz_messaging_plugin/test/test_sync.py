@@ -1,3 +1,4 @@
+import yaz
 from .tester import TestCase
 
 
@@ -54,5 +55,6 @@ controller:
         self.assertEqual(expected_en, self.get_file_content("sync.en.yml"))
 
     def test_030_cleanup__fail(self):
-        args = (self.get_caller(), "cleanup", "--sync", "fail")
-        self.assertRaisesRegex(RuntimeError, r"Translatable .* is not set in .*", *args)
+        caller = self.get_caller()
+        with self.assertRaisesRegex(yaz.Error, r"Translatable .* is not set in .*"):
+            caller("cleanup", "--sync", "fail")

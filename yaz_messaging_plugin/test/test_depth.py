@@ -1,3 +1,4 @@
+import yaz
 from .tester import TestCase
 
 
@@ -82,6 +83,7 @@ a.b:
         caller("cleanup", "--changes", "overwrite", "--depth", "join")
         self.assertEqual(expected, self.get_file_content("depth.nl.yml"))
 
-    def test_050_cleanup__fail(self):
-        args = (self.get_caller(), "cleanup", "--depth", "fail")
-        self.assertRaisesRegex(RuntimeError, r"Conflicting keys when expanding path .*", *args)
+    def test_020_cleanup__fail(self):
+        caller = self.get_caller()
+        with self.assertRaisesRegex(yaz.Error, r"Conflicting keys when expanding path .*"):
+            caller("cleanup", "--depth", "fail")

@@ -75,7 +75,7 @@ class Messaging(yaz.BasePlugin):
         When there are more than one possible messages,
         the STRATEGY will decide how the duplication is resolved.
         The following STRATEGY options are available:
-        - fail: raises a RuntimeError
+        - fail: raises a yaz.Error
         - first: chooses the first defined message and ignores any others
         - last: chooses the last defined message and ignores any others
         - ask: lets the user choose the message
@@ -94,7 +94,7 @@ class Messaging(yaz.BasePlugin):
         if strategy == "fail":
             for key, value in messages.items():
                 if len(value) > 1:
-                    raise RuntimeError("Translatable \"{}\" has multiple possible values \"{}\"".format(key, value))
+                    raise yaz.Error("Translatable \"{}\" has multiple possible values \"{}\"".format(key, value))
             return dict((key, value[0]) for key, value in messages.items())
         elif strategy == "first":
             return dict((key, value[0]) for key, value in messages.items())
@@ -109,7 +109,9 @@ class Messaging(yaz.BasePlugin):
     def resolve_changes(self, strategy, file, messages, indent):
         buffer = io.StringIO()
         yaml.dump(messages, buffer, default_flow_style=False, width=1024 * 5, indent=indent)
+
         with open(file, "r") as file_handle:
+            buffer.seek(0)
             requires_changes = buffer.read() != file_handle.read()
 
         if requires_changes:
@@ -117,7 +119,7 @@ class Messaging(yaz.BasePlugin):
             logger.debug("changes detected in file \"%s\"", file)
 
             if strategy == "fail":
-                raise RuntimeError("changes detected in file \"{}\"".format(file))
+                raise yaz.Error("changes detected in file \"{}\"".format(file))
             if strategy == "overwrite":
                 with open(file, "w") as output:
                     for line in buffer.readlines():
@@ -166,7 +168,7 @@ class Messaging(yaz.BasePlugin):
                         continue
 
                     if strategy == "fail":
-                        raise RuntimeError("Conflicting keys when expanding path \"{}\"".format(".".join(keys)))
+                        raise yaz.Error("Conflicting keys when expanding path \"{}\"".format(".".join(keys)))
 
             key = keys[-1]
             if prefix:
@@ -195,13 +197,14 @@ class Messaging(yaz.BasePlugin):
         if strategy == "fail":
             for file, messages in domains.items():
                 for key in all_keys.difference(messages.keys()):
-                    raise RuntimeError("Translatable \"{}\" is not set in \"{}\"".format(key, file))
+                    raise yaz.Error("Translatable \"{}\" is not set in \"{}\"".format(key, file))
 
         domains = copy.deepcopy(domains)
         if strategy == "use-key":
-            for messages in domains.values():
+            for file, messages in domains.items():
                 for key in all_keys.difference(messages.keys()):
                     messages[key] = key
+                    logger.info("\"use-key\" strategy used to add \"%s\" to \"%s\"", key, file)
 
         if strategy == "ask":
             raise NotImplementedError("todo: implement duplicate_strategy=\"ask\" strategy")
