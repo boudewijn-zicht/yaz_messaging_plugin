@@ -10,7 +10,7 @@ import glob
 import os
 import os.path
 
-from .log import logger
+from .log import logger, set_verbose
 from .loader import OrderedDictLoader
 
 
@@ -24,27 +24,30 @@ class Messaging(yaz.BasePlugin):
         logger.debug("translation directories: %s", self.dirs)
 
     @yaz.task
-    def check(self, depth: int = 666, indent: int = 4):
+    def check(self, depth: int = 666, indent: int = 4, verbose: bool = False):
         """
         Find translation files and check them, any required changes will result in an error
         """
+        set_verbose(verbose)
         return self.cleanup(changes="fail", duplicate="fail", sync="fail", depth="fail", max_depth=depth, indent_length=indent)
 
     @yaz.task
-    def fix(self, depth: int = 666, indent: int = 4):
+    def fix(self, depth: int = 666, indent: int = 4, verbose: bool = False):
         """
         Find translation files and fix them in-line
         """
-        return self.cleanup(changes="overwite", duplicate="first", sync="use-key", depth="join", max_depth=depth, indent_length=indent)
+        set_verbose(verbose)
+        return self.cleanup(changes="overwrite", duplicate="first", sync="use-key", depth="join", max_depth=depth, indent_length=indent)
 
     @yaz.task(changes__choices=["ask", "overwrite", "fail"],
               duplicate__choices=["ask", "first", "last", "fail"],
               sync__choices=["ask", "use-key", "ignore", "fail"],
               depth__choices=["ask", "join", "fail"])
-    def cleanup(self, changes="ask", duplicate="ask", sync="ask", depth="ask", max_depth: int = 666, indent_length: int = 4):
+    def cleanup(self, changes="ask", duplicate="ask", sync="ask", depth="ask", max_depth: int = 666, indent_length: int = 4, verbose: bool = False):
         """
         Find translation files and resolve issues using strategies given by the arguments
         """
+        set_verbose(verbose)
         for domain, files in self.get_message_files():
             domains = {}
 
