@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(name="yaz_messaging_plugin",
       packages=["yaz_messaging_plugin"],
-      version="1.0.1",
+      version="1.0.2",
       description="A symfony message translation plugin for YAZ",
       author="Boudewijn Schoon",
       author_email="boudewijn@zicht.nl",
