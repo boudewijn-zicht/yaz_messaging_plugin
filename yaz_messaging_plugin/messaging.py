@@ -1,14 +1,16 @@
-import difflib
-import io
-import yaz
-import yaml
-import copy
 import collections
-import itertools
-import re
+import copy
+import difflib
 import glob
+import io
+import itertools
 import os
 import os.path
+import re
+import yaml
+import yaml.constructor
+import yaml.scanner
+import yaz
 
 from .log import logger, set_verbose
 from .loader import OrderedDictLoader
@@ -244,8 +246,12 @@ class Messaging(yaz.BasePlugin):
 
             return messages
 
-        with open(file, "r") as file_handle:
-            return recursion(collections.defaultdict(list), "", yaml.load(file_handle, OrderedDictLoader))
+        try:
+            with open(file, "r") as file_handle:
+                return recursion(collections.defaultdict(list), "", yaml.load(file_handle, OrderedDictLoader))
+
+        except (yaml.scanner.ScannerError, yaml.constructor.ConstructorError) as error:
+            raise yaz.Error(error)
 
     def get_message_files(self):
         """Iterate over available message files grouped by directory and domain"""

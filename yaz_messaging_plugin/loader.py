@@ -3,7 +3,7 @@ import yaml
 import yaml.constructor
 
 
-class OrderedDictLoader(yaml.Loader):
+class OrderedDictLoader(yaml.SafeLoader):
     """
     A YAML loader that loads mappings into ordered dictionaries.
     """
