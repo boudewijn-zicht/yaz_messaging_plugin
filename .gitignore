@@ -3,6 +3,7 @@
 /.coverage
 __pycache__
 build/
+cover/
 dist/
 env/
 yaz_messaging_plugin.egg-info
