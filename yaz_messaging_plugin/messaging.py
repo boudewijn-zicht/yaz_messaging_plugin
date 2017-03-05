@@ -15,6 +15,9 @@ from .loader import OrderedDictLoader
 
 
 class Messaging(yaz.BasePlugin):
+    """
+    Find and evaluate Symfony translation files.
+    """
     dirs = ["src/*/Bundle/*/Resources/translations/"]
 
     def __init__(self):
@@ -22,10 +25,16 @@ class Messaging(yaz.BasePlugin):
 
     @yaz.task
     def check(self, depth: int = 666, indent: int = 4):
+        """
+        Find translation files and check them, any required changes will result in an error
+        """
         return self.cleanup(changes="fail", duplicate="fail", sync="fail", depth="fail", max_depth=depth, indent_length=indent)
 
     @yaz.task
     def fix(self, depth: int = 666, indent: int = 4):
+        """
+        Find translation files and fix them in-line
+        """
         return self.cleanup(changes="overwite", duplicate="first", sync="use-key", depth="join", max_depth=depth, indent_length=indent)
 
     @yaz.task(changes__choices=["ask", "overwrite", "fail"],
@@ -33,6 +42,9 @@ class Messaging(yaz.BasePlugin):
               sync__choices=["ask", "use-key", "ignore", "fail"],
               depth__choices=["ask", "join", "fail"])
     def cleanup(self, changes="ask", duplicate="ask", sync="ask", depth="ask", max_depth: int = 666, indent_length: int = 4):
+        """
+        Find translation files and resolve issues using strategies given by the arguments
+        """
         for domain, files in self.get_message_files():
             domains = {}
 
