@@ -236,6 +236,7 @@ class Messaging(yaz.BasePlugin):
         def recursion(messages, key, value):
             assert isinstance(messages, dict), type(messages)
             assert isinstance(key, str), type(key)
+            assert isinstance(value, (dict, str)), type(value)
 
             if isinstance(value, dict):
                 for postfix, value in value.items():
