@@ -12,11 +12,15 @@ message: this line has a colon at : the end
 """.lstrip()
     }
 
-    def test_010_cleanup(self):
+    def test_010_check(self):
+        caller = self.get_caller()
+        with self.assertRaisesRegex(yaz.Error, r"mapping values are not allowed here"):
+            caller("check")
+
+    def test_020_cleanup(self):
         caller = self.get_caller()
         with self.assertRaisesRegex(yaz.Error, r"mapping values are not allowed here"):
             caller("cleanup")
-
 
 class TestParsingWithExclamationMark(TestCase):
     """
@@ -28,11 +32,28 @@ message: !foo should be quoted
 """.lstrip()
     }
 
-    def test_010_cleanup(self):
+    def test_010_check(self):
+        caller = self.get_caller()
+        with self.assertRaisesRegex(yaz.Error, r"could not determine a constructor for the tag .!foo."):
+            caller("check")
+
+    def test_020_cleanup(self):
         caller = self.get_caller()
         with self.assertRaisesRegex(yaz.Error, r"could not determine a constructor for the tag .!foo."):
             caller("cleanup")
 
+
+# class TestEmptyFile(TestCase):
+#     """
+#     Empty files should also be handled properly
+#     """
+#     files = {
+#         "empty.nl.yml": ""
+#     }
+#
+#     def test_010_cleanup(self):
+#         caller = self.get_caller()
+#         caller("cleanup")
 
 class TestTypesAsString(TestCase):
     """
