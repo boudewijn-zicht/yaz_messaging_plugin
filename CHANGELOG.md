@@ -13,3 +13,6 @@
 - No parsing for types: bool, float, int, null, and timestamp.  This
   results in parsing which is much more compatible with how Symfony
   handles it's translations
+
+# 1.0.4
+- Fixes bug where an empty translation file would give an assertion
