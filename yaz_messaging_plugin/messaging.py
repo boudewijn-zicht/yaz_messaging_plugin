@@ -72,7 +72,7 @@ class Messaging(yaz.BasePlugin):
                 # Resolve changes
                 self.resolve_changes(changes, file, messages, indent_length)
 
-        return None
+        return True
 
     def resolve_duplicate_keys(self, strategy, messages):
         """Given a STRATEGY and a dict with possibly duplicate messages, return a non-duplicate dict
@@ -113,7 +113,8 @@ class Messaging(yaz.BasePlugin):
 
     def resolve_changes(self, strategy, file, messages, indent):
         buffer = io.StringIO()
-        yaml.dump(messages, buffer, default_flow_style=False, width=1024 * 5, indent=indent)
+        if messages:
+            yaml.dump(messages, buffer, default_flow_style=False, width=1024 * 5, indent=indent)
 
         with open(file, "r") as file_handle:
             buffer.seek(0)
@@ -236,7 +237,7 @@ class Messaging(yaz.BasePlugin):
         def recursion(messages, key, value):
             assert isinstance(messages, dict), type(messages)
             assert isinstance(key, str), type(key)
-            assert isinstance(value, (dict, str)), type(value)
+            assert value is None or isinstance(value, (dict, str)), type(value)
 
             if isinstance(value, dict):
                 for postfix, value in value.items():

@@ -43,17 +43,22 @@ message: !foo should be quoted
             caller("cleanup")
 
 
-# class TestEmptyFile(TestCase):
-#     """
-#     Empty files should also be handled properly
-#     """
-#     files = {
-#         "empty.nl.yml": ""
-#     }
-#
-#     def test_010_cleanup(self):
-#         caller = self.get_caller()
-#         caller("cleanup")
+class TestEmptyFile(TestCase):
+    """
+    Empty files should pass though the 'check' and not result in any changes
+    """
+    files = {
+        "empty.nl.yml": ""
+    }
+
+    def test_010_check(self):
+        caller = self.get_caller()
+        self.assertTrue(caller("check"))
+
+    def test_020_cleanup(self):
+        caller = self.get_caller()
+        self.assertTrue(caller("cleanup"))
+        self.assertEqual("", self.get_file_content("empty.nl.yml"))
 
 class TestTypesAsString(TestCase):
     """
