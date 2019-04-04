@@ -16,3 +16,6 @@
 
 # 1.0.4
 - Fixes bug where an empty translation file would give an assertion
+
+# 1.0.5
+- Allow unicode in resulting yaml files

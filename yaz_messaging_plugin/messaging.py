@@ -114,7 +114,7 @@ class Messaging(yaz.BasePlugin):
     def resolve_changes(self, strategy, file, messages, indent):
         buffer = io.StringIO()
         if messages:
-            yaml.dump(messages, buffer, default_flow_style=False, width=1024 * 5, indent=indent)
+            yaml.dump(messages, buffer, default_flow_style=False, width=1024 * 5, indent=indent, allow_unicode=True)
 
         with open(file, "r") as file_handle:
             buffer.seek(0)

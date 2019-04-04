@@ -9,7 +9,7 @@ pip3 install yaz_messaging_plugin
 
 ## From source
 ```sh
-git clone git@github.com:boudewijn-zicht/yaz_messaging_plugin.git
+git clone git@github.com:yaz/yaz_messaging_plugin.git
 cd yaz_messaging_plugin
 python3 setup.py install
 ```
