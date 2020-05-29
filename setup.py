@@ -2,7 +2,7 @@ import os
 import setuptools
 import sys
 
-with open("yaz_zichtgithub_plugin/version.py") as file:
+with open("yaz_messaging_plugin/version.py") as file:
     globals = {}
     exec(file.read(), globals)
     version = globals["__version__"]
