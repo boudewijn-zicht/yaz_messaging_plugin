@@ -2,6 +2,7 @@ import collections
 import copy
 import difflib
 import glob
+import googletrans
 import io
 import itertools
 import os
@@ -12,44 +13,52 @@ import yaml.constructor
 import yaml.scanner
 import yaz
 
-from .log import logger, set_verbose
 from .loader import OrderedDictLoader
+from .log import logger, set_verbose
+from .version import __version__
 
 
 class Messaging(yaz.BasePlugin):
     """
     Find and evaluate Symfony translation files.
     """
-    dirs = ["src/*/Bundle/*/Resources/translations/"]
+    dirs = ["src/*/Bundle/*/Resources/translations/", "translations/"]
 
     def __init__(self):
         logger.debug("translation directories: %s", self.dirs)
 
     @yaz.task
-    def check(self, depth: int = 666, indent: int = 4, verbose: bool = False):
-        """
-        Find translation files and check them, any required changes will result in an error
-        """
-        set_verbose(verbose)
-        return self.cleanup(changes="fail", duplicate="fail", sync="fail", depth="fail", max_depth=depth, indent_length=indent)
-
-    @yaz.task
-    def fix(self, depth: int = 666, indent: int = 4, verbose: bool = False):
-        """
-        Find translation files and fix them in-line
-        """
-        set_verbose(verbose)
-        return self.cleanup(changes="overwrite", duplicate="first", sync="use-key", depth="join", max_depth=depth, indent_length=indent)
+    def version(self, verbose: bool = False, debug: bool = False):
+        """Gives the software version."""
+        set_verbose(verbose, debug)
+        return __version__
 
     @yaz.task(changes__choices=["ask", "overwrite", "fail"],
               duplicate__choices=["ask", "first", "last", "fail"],
-              sync__choices=["ask", "use-key", "ignore", "fail"],
+              sync__choices=["ask", "google-translate", "use-key", "ignore", "fail"],
               depth__choices=["ask", "join", "fail"])
-    def cleanup(self, changes="ask", duplicate="ask", sync="ask", depth="ask", max_depth: int = 666, indent_length: int = 4, verbose: bool = False):
+    def check(self, changes: str = "fail", duplicate: str = "fail", sync: str = "fail", depth: str = "fail", max_depth: int = 666, indent: int = 4, verbose: bool = False, debug: bool = False):
+        """
+        Find translation files and check them, any required changes will result in an error
+        """
+        set_verbose(verbose, debug)
+        return self.cleanup(changes=changes, duplicate=duplicate, sync=sync, depth=depth, max_depth=max_depth, indent_length=indent)
+
+    @yaz.task(changes__choices=["ask", "overwrite", "fail"],
+              duplicate__choices=["ask", "first", "last", "fail"],
+              sync__choices=["ask", "google-translate", "use-key", "ignore", "fail"],
+              depth__choices=["ask", "join", "fail"])
+    def fix(self, changes: str = "overwrite", duplicate: str = "first", sync: str = "google-translate", depth: str = "join", max_depth: int = 666, indent: int = 4, verbose: bool = False, debug: bool = False):
+        """
+        Find translation files and fix them in-line
+        """
+        set_verbose(verbose, debug)
+        return self.cleanup(changes=changes, duplicate=duplicate, sync=sync, depth=depth, max_depth=max_depth, indent_length=indent)
+
+    def cleanup(self, changes: str = "ask", duplicate: str = "ask", sync: str = "ask", depth: str = "ask", max_depth: int = 666, indent_length: int = 4):
         """
         Find translation files and resolve issues using strategies given by the arguments
         """
-        set_verbose(verbose)
         for domain, files in self.get_message_files():
             domains = {}
 
@@ -206,6 +215,35 @@ class Messaging(yaz.BasePlugin):
                     raise yaz.Error("Translatable \"{}\" is not set in \"{}\"".format(key, file))
 
         domains = copy.deepcopy(domains)
+        if strategy == 'google-translate':
+            translator = googletrans.Translator()
+            for file, messages in domains.items():
+                destination_language = self.get_filename_match(file).group("language")
+                for key in all_keys.difference(messages.keys()):
+                    # get list of translation sources for this key
+                    sources = [(self.get_filename_match(file).group("language"), messages[key]) for file, messages in domains.items() if key in messages]
+                    # sort sources, prioritize english if available
+                    sources = sorted(sources, key=lambda source: {"en": "0"}.get(source[0], source[0]))
+
+                    # replace placeholders with translation-safe strings
+                    replacements = []
+                    def replace(match):
+                        replacements.append(match.group("placeholder"))
+                        return "[{id:06d}]".format(id=len(replacements) - 1)
+                    source_text = re.sub(r"(?P<placeholder>%[^%]+%)", replace, sources[0][1])
+                    source_language = sources[0][0]
+
+                    # call translation API
+                    translation = translator.translate(source_text, src=source_language, dest=destination_language).text
+
+                    # return the placeholder replacements to their original placeholders
+                    def un_replace(match):
+                        return replacements[int(match.group("id"))]
+                    translation = re.sub(r"\[(?P<id>\d{6})\]", un_replace, translation)
+
+                    messages[key] = translation
+                    logger.info("\"google-translate\" strategy used to translate \"%s\" (%s) into \"%s\" (%s) and add \"%s\" to \"%s\"", sources[0][1], sources[0][0], translation, destination_language, key, file)
+
         if strategy == "use-key":
             for file, messages in domains.items():
                 for key in all_keys.difference(messages.keys()):
@@ -259,7 +297,19 @@ class Messaging(yaz.BasePlugin):
         """Iterate over available message files grouped by directory and domain"""
         for dir_pattern in self.dirs:
             for dir in glob.glob(dir_pattern):
-                files = [re.match(r"^(?P<filename>(?P<domain>\w+)[.](?P<language>\w{2})[.]yml)$", file) for file in sorted(os.listdir(dir))]
+                files = [self.get_filename_match(filename) for filename in sorted(os.listdir(dir))]
                 files = [file.groupdict() for file in files if file]
                 for domain, files in itertools.groupby(files, lambda file: file["domain"]):
                     yield domain, [os.path.join(dir, file["filename"]) for file in files]
+
+    def get_filename_match(self, filename):
+        """Returns a match object with filename, domain, and language groups
+
+        Can match the following types of strings:
+        - "message.en.yml"          # yml extension
+        - "message.en.yaml"         # yaml extension
+        - "message.en_GB.yml"       # en or en_GB language
+        - "/disk/message.en.yml"    # absolute file paths
+        """
+        assert isinstance(filename, str), type(filename)
+        return re.match(r"(.*/)?(?P<filename>(?P<domain>\w+)[.](?P<language>\w{2}(_\w{2})?)[.](?P<extension>yml|yaml))$", filename)

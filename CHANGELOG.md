@@ -19,3 +19,6 @@
 
 # 1.0.5
 - Allow unicode in resulting yaml files
+
+# 1.1.0
+- Use the `googletrans` library to translate missing values during sync
