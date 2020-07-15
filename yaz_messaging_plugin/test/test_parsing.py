@@ -17,10 +17,10 @@ message: this line has a colon at : the end
         with self.assertRaisesRegex(yaz.Error, r"mapping values are not allowed here"):
             caller("check")
 
-    def test_020_cleanup(self):
+    def test_020_fix(self):
         caller = self.get_caller()
         with self.assertRaisesRegex(yaz.Error, r"mapping values are not allowed here"):
-            caller("cleanup")
+            caller("fix")
 
 
 class TestParsingWithExclamationMark(ClassTestCase):
@@ -38,10 +38,10 @@ message: !foo should be quoted
         with self.assertRaisesRegex(yaz.Error, r"could not determine a constructor for the tag .!foo."):
             caller("check")
 
-    def test_020_cleanup(self):
+    def test_020_fix(self):
         caller = self.get_caller()
         with self.assertRaisesRegex(yaz.Error, r"could not determine a constructor for the tag .!foo."):
-            caller("cleanup")
+            caller("fix")
 
 
 class TestEmptyFile(ClassTestCase):
@@ -56,9 +56,9 @@ class TestEmptyFile(ClassTestCase):
         caller = self.get_caller()
         self.assertTrue(caller("check"))
 
-    def test_020_cleanup(self):
+    def test_020_fix(self):
         caller = self.get_caller()
-        self.assertTrue(caller("cleanup"))
+        self.assertTrue(caller("fix"))
         self.assertEqual("", self.get_file_content("empty.nl.yml"))
 
 
@@ -85,7 +85,7 @@ yes: Yes
         with self.assertRaisesRegex(yaz.Error, r"changes detected in file"):
             caller("check")
 
-    def test_020_cleanup(self):
+    def test_020_fix(self):
         expected = """
 'false': 'False'
 maybe:
@@ -98,7 +98,7 @@ maybe:
 """.lstrip()
 
         caller = self.get_caller()
-        caller("cleanup", "--changes", "overwrite")
+        caller("fix", "--changes", "overwrite")
         self.assertEqual(expected, self.get_file_content("type.nl.yml"))
 
     def test_030_check(self):
@@ -129,7 +129,7 @@ sexagesimal: 190:20:30.15
         with self.assertRaisesRegex(yaz.Error, r"changes detected in file"):
             caller("check")
 
-    def test_020_cleanup(self):
+    def test_020_fix(self):
         expected = """
 canonical: '6.8523015e+5'
 exponentioal: '685.230_15e+03'
@@ -140,7 +140,7 @@ sexagesimal: '190:20:30.15'
 """.lstrip()
 
         caller = self.get_caller()
-        caller("cleanup", "--changes", "overwrite")
+        caller("fix", "--changes", "overwrite")
         self.assertEqual(expected, self.get_file_content("type.nl.yml"))
 
     def test_030_check(self):
@@ -171,7 +171,7 @@ sexagesimal: 190:20:30
         with self.assertRaisesRegex(yaz.Error, r"changes detected in file"):
             caller("check")
 
-    def test_020_cleanup(self):
+    def test_020_fix(self):
         expected = """
 binary: '0b1010_0111_0100_1010_1110'
 canonical: '685230'
@@ -182,7 +182,7 @@ sexagesimal: '190:20:30'
 """.lstrip()
 
         caller = self.get_caller()
-        caller("cleanup", "--changes", "overwrite")
+        caller("fix", "--changes", "overwrite")
         self.assertEqual(expected, self.get_file_content("type.nl.yml"))
 
     def test_030_check(self):
@@ -211,7 +211,7 @@ english: null
         with self.assertRaisesRegex(yaz.Error, r"changes detected in file"):
             caller("check")
 
-    def test_020_cleanup(self):
+    def test_020_fix(self):
         expected = """
 canonical: '~'
 empty: ''
@@ -220,7 +220,7 @@ english: 'null'
 """.lstrip()
 
         caller = self.get_caller()
-        caller("cleanup", "--changes", "overwrite")
+        caller("fix", "--changes", "overwrite")
         self.assertEqual(expected, self.get_file_content("type.nl.yml"))
 
     def test_030_check(self):
@@ -250,7 +250,7 @@ valid iso8601:    2001-12-14t21:59:43.10-05:00
         with self.assertRaisesRegex(yaz.Error, r"changes detected in file"):
             caller("check")
 
-    def test_020_cleanup(self):
+    def test_020_fix(self):
         expected = """
 canonical: '2001-12-15T02:59:43.1Z'
 date (00:00:00Z): '2002-12-14'
@@ -260,7 +260,7 @@ valid iso8601: '2001-12-14t21:59:43.10-05:00'
 """.lstrip()
 
         caller = self.get_caller()
-        caller("cleanup", "--changes", "overwrite")
+        caller("fix", "--changes", "overwrite")
         self.assertEqual(expected, self.get_file_content("type.nl.yml"))
 
     def test_030_check(self):

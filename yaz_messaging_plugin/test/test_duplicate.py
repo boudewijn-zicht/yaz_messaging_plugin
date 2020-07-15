@@ -16,7 +16,7 @@ controller:
     """.lstrip()
     }
 
-    def test_010_cleanup__first(self):
+    def test_010_fix__first(self):
         expected = """
 controller:
     action:
@@ -26,10 +26,10 @@ controller:
 """.lstrip()
 
         caller = self.get_caller()
-        caller("cleanup", "--changes", "overwrite", "--duplicate", "first")
+        caller("fix", "--changes", "overwrite", "--duplicate", "first")
         self.assertEqual(expected, self.get_file_content("duplicate_keys.nl.yml"))
 
-    def test_020_cleanup__last(self):
+    def test_020_fix__last(self):
         expected = """
 controller:
     action:
@@ -39,10 +39,10 @@ controller:
 """.lstrip()
 
         caller = self.get_caller()
-        caller("cleanup", "--changes", "overwrite", "--duplicate", "last")
+        caller("fix", "--changes", "overwrite", "--duplicate", "last")
         self.assertEqual(expected, self.get_file_content("duplicate_keys.nl.yml"))
 
-    def test_030_cleanup__fail(self):
+    def test_030_fix__fail(self):
         caller = self.get_caller()
         with self.assertRaisesRegex(yaz.Error, r"Translatable .* has multiple possible values .*"):
-            caller("cleanup", "--duplicate", "fail")
+            caller("fix", "--duplicate", "fail")

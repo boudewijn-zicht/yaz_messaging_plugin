@@ -16,7 +16,7 @@ controller:
 """.lstrip()
     }
 
-    def test_010_cleanup__google_translate(self):
+    def test_010_fix__google_translate(self):
         expected_nl = """
 controller:
     action:
@@ -32,7 +32,7 @@ controller:
 """.lstrip()
 
         caller = self.get_caller()
-        caller("cleanup", "--changes", "overwrite", "--sync", "google-translate")
+        caller("fix", "--changes", "overwrite", "--sync", "google-translate")
         self.assertEqual(expected_nl, self.get_file_content("translate.nl.yml"))
         self.assertEqual(expected_en, self.get_file_content("translate.en.yml"))
 
@@ -47,7 +47,7 @@ controller:
         "translate.en.yml": ""
     }
 
-    def test_010_cleanup__google_translate(self):
+    def test_010_fix__google_translate(self):
         expected_en = """
 controller:
     action:
@@ -56,5 +56,5 @@ controller:
 """.lstrip()
 
         caller = self.get_caller()
-        caller("cleanup", "--changes", "overwrite", "--sync", "google-translate")
+        caller("fix", "--changes", "overwrite", "--sync", "google-translate")
         self.assertEqual(expected_en, self.get_file_content("translate.en.yml"))
