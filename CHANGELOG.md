@@ -22,3 +22,8 @@
 
 # 1.1.0
 - Use the `googletrans` library to translate missing values during sync
+
+# 1.1.1
+- Fix unit tests
+- Fix bug when trying to google translate an empty string
+- Add support for `!foo` placeholders using google translate

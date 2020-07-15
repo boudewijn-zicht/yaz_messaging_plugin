@@ -8,6 +8,7 @@ import itertools
 import os
 import os.path
 import re
+import time
 import yaml
 import yaml.constructor
 import yaml.scanner
@@ -230,16 +231,25 @@ class Messaging(yaz.BasePlugin):
                     def replace(match):
                         replacements.append(match.group("placeholder"))
                         return "[{id:06d}]".format(id=len(replacements) - 1)
-                    source_text = re.sub(r"(?P<placeholder>%[^%]+%)", replace, sources[0][1])
-                    source_language = sources[0][0]
+                    source_text = sources[0][1]
+                    source_text = re.sub(r"(?P<placeholder>%[^%]+%)", replace, source_text)
+                    source_text = re.sub(r"(?P<placeholder>![a-zA-Z]+)", replace, source_text)
+                    if source_text:
+                        source_language = sources[0][0]
 
-                    # call translation API
-                    translation = translator.translate(source_text, src=source_language, dest=destination_language).text
+                        # call translation API
+                        try:
+                            translation = translator.translate(source_text, src=source_language, dest=destination_language).text
+                        except:
+                            logger.error("\"google-translate\" Error while translating \"%s\" from \"%s\" into \"%s\"", source_text, source_language, destination_language)
+                            raise
 
-                    # return the placeholder replacements to their original placeholders
-                    def un_replace(match):
-                        return replacements[int(match.group("id"))]
-                    translation = re.sub(r"\[(?P<id>\d{6})\]", un_replace, translation)
+                        # return the placeholder replacements to their original placeholders
+                        def un_replace(match):
+                            return replacements[int(match.group("id"))]
+                        translation = re.sub(r"\[(?P<id>\d{6})\]", un_replace, translation)
+                    else:
+                        translation = ''
 
                     messages[key] = translation
                     logger.info("\"google-translate\" strategy used to translate \"%s\" (%s) into \"%s\" (%s) and add \"%s\" to \"%s\"", sources[0][1], sources[0][0], translation, destination_language, key, file)
