@@ -8,7 +8,6 @@ import itertools
 import os
 import os.path
 import re
-import time
 import yaml
 import yaml.constructor
 import yaml.scanner
@@ -128,28 +127,28 @@ class Messaging(yaz.BasePlugin):
 
         with open(file, "r") as file_handle:
             buffer.seek(0)
-            requires_changes = buffer.read() != file_handle.read()
+            proposed_changes = "".join(difflib.context_diff(
+                file_handle.readlines(),
+                buffer.readlines(),
+                fromfile="original {}".format(file),
+                tofile="proposed {}".format(file),
+                n=0
+            ))
 
-        if requires_changes:
+        if proposed_changes:
             buffer.seek(0)
             logger.debug("changes detected in file \"%s\"", file)
 
             if strategy == "fail":
+                print(proposed_changes)
                 raise yaz.Error("changes detected in file \"{}\"".format(file))
             if strategy == "overwrite":
+                logger.info(proposed_changes)
                 with open(file, "w") as output:
                     for line in buffer.readlines():
                         output.write(line)
             if strategy == "ask":
-                with open(file, "r") as file_handle:
-                    diff = difflib.context_diff(
-                        file_handle.readlines(),
-                        buffer.readlines(),
-                        "original {}".format(file),
-                        "proposed {}".format(file)
-                    )
-                for line in diff:
-                    print(line.rstrip())
+                print(proposed_changes)
                 raise NotImplementedError("todo: implement syntax_changes_strategy=\"ask\" strategy")
 
     def resolve_message_depth(self, strategy, depth, messages):
