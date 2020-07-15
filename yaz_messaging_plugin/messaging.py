@@ -127,28 +127,28 @@ class Messaging(yaz.BasePlugin):
 
         with open(file, "r") as file_handle:
             buffer.seek(0)
-            requires_changes = buffer.read() != file_handle.read()
+            proposed_changes = "".join(difflib.context_diff(
+                file_handle.readlines(),
+                buffer.readlines(),
+                fromfile="original {}".format(file),
+                tofile="proposed {}".format(file),
+                n=0
+            ))
 
-        if requires_changes:
+        if proposed_changes:
             buffer.seek(0)
             logger.debug("changes detected in file \"%s\"", file)
 
             if strategy == "fail":
+                print(proposed_changes)
                 raise yaz.Error("changes detected in file \"{}\"".format(file))
             if strategy == "overwrite":
+                logger.info(proposed_changes)
                 with open(file, "w") as output:
                     for line in buffer.readlines():
                         output.write(line)
             if strategy == "ask":
-                with open(file, "r") as file_handle:
-                    diff = difflib.context_diff(
-                        file_handle.readlines(),
-                        buffer.readlines(),
-                        "original {}".format(file),
-                        "proposed {}".format(file)
-                    )
-                for line in diff:
-                    print(line.rstrip())
+                print(proposed_changes)
                 raise NotImplementedError("todo: implement syntax_changes_strategy=\"ask\" strategy")
 
     def resolve_message_depth(self, strategy, depth, messages):
@@ -230,16 +230,25 @@ class Messaging(yaz.BasePlugin):
                     def replace(match):
                         replacements.append(match.group("placeholder"))
                         return "[{id:06d}]".format(id=len(replacements) - 1)
-                    source_text = re.sub(r"(?P<placeholder>%[^%]+%)", replace, sources[0][1])
-                    source_language = sources[0][0]
+                    source_text = sources[0][1]
+                    source_text = re.sub(r"(?P<placeholder>%[^%]+%)", replace, source_text)
+                    source_text = re.sub(r"(?P<placeholder>![a-zA-Z]+)", replace, source_text)
+                    if source_text:
+                        source_language = sources[0][0]
 
-                    # call translation API
-                    translation = translator.translate(source_text, src=source_language, dest=destination_language).text
+                        # call translation API
+                        try:
+                            translation = translator.translate(source_text, src=source_language, dest=destination_language).text
+                        except:
+                            logger.error("\"google-translate\" Error while translating \"%s\" from \"%s\" into \"%s\"", source_text, source_language, destination_language)
+                            raise
 
-                    # return the placeholder replacements to their original placeholders
-                    def un_replace(match):
-                        return replacements[int(match.group("id"))]
-                    translation = re.sub(r"\[(?P<id>\d{6})\]", un_replace, translation)
+                        # return the placeholder replacements to their original placeholders
+                        def un_replace(match):
+                            return replacements[int(match.group("id"))]
+                        translation = re.sub(r"\[(?P<id>\d{6})\]", un_replace, translation)
+                    else:
+                        translation = ''
 
                     messages[key] = translation
                     logger.info("\"google-translate\" strategy used to translate \"%s\" (%s) into \"%s\" (%s) and add \"%s\" to \"%s\"", sources[0][1], sources[0][0], translation, destination_language, key, file)
