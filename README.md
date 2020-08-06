@@ -4,7 +4,7 @@ TODO: Short description here
 # Installing
 ## From a package
 ```sh
-pip3 install yaz_messaging_plugin
+sudo pip3 install yaz_messaging_plugin
 ```
 
 ## From source
