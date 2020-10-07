@@ -28,3 +28,7 @@
 - Fix bug when trying to google translate an empty string
 - Add support for `!foo` placeholders using google translate
 - Show the diff when a change is detected (allowing someone to manually fix it)
+
+# 1.1.2
+- Will now also look in `"src/Resources/translations/"` for potential
+  translation files

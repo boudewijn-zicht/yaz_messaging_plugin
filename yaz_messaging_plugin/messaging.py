@@ -22,7 +22,7 @@ class Messaging(yaz.BasePlugin):
     """
     Find and evaluate Symfony translation files.
     """
-    dirs = ["src/*/Bundle/*/Resources/translations/", "translations/"]
+    dirs = ["src/*/Bundle/*/Resources/translations/", "src/Resources/translations/", "translations/"]
 
     def __init__(self):
         logger.debug("translation directories: %s", self.dirs)
