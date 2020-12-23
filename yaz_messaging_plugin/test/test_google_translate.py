@@ -21,7 +21,7 @@ controller:
 controller:
     action:
         hello_world: Hallo Wereld
-        quick: De snelle bruine vos springt over de luie hond
+        quick: De snelle bruine vos springt over de luie hond heen
 """.lstrip()
 
         expected_en = """
@@ -81,10 +81,10 @@ controller:
         expected_en = """
 controller:
     action:
-        farewell_a: Bye !username
-        farewell_b: Goodbye !username, it was nice that you had
+        farewell_a: See you soon !username
+        farewell_b: Goodbye !username, it was nice that you were there
         greeting_a: Hello %username%
-        greeting_b: Hello %username%, today %today% and you have to do it %thingsTodo% things
+        greeting_b: Hello %username%, today is %today% and you still have %thingsTodo% things to do
 """.lstrip()
 
         caller = self.get_caller()

@@ -2,7 +2,7 @@ import collections
 import copy
 import difflib
 import glob
-import googletrans
+import google.cloud.translate_v2
 import io
 import itertools
 import os
@@ -25,12 +25,16 @@ class Messaging(yaz.BasePlugin):
     dirs = ["src/*/Bundle/*/Resources/translations/", "src/Resources/translations/", "translations/"]
 
     def __init__(self):
+        self.translator = None
         logger.debug("translation directories: %s", self.dirs)
 
     @yaz.task
     def version(self, verbose: bool = False, debug: bool = False):
         """Gives the software version."""
         set_verbose(verbose, debug)
+        logger.info("using google-cloud-translate {}".format(google.cloud.translate_v2.__version__))
+        logger.info("using pyyaml                 {}".format(yaml.__version__))
+        logger.info("using yaz                    {}".format(yaz.version))
         return __version__
 
     @yaz.task(changes__choices=["ask", "overwrite", "fail"],
@@ -216,7 +220,7 @@ class Messaging(yaz.BasePlugin):
 
         domains = copy.deepcopy(domains)
         if strategy == 'google-translate':
-            translator = googletrans.Translator()
+            translator = self.init_google_translator()
             for file, messages in domains.items():
                 destination_language = self.get_filename_match(file).group("language")
                 for key in all_keys.difference(messages.keys()):
@@ -238,7 +242,7 @@ class Messaging(yaz.BasePlugin):
 
                         # call translation API
                         try:
-                            translation = translator.translate(source_text, src=source_language, dest=destination_language).text
+                            translation = translator.translate(source_text, source_language=source_language, target_language=destination_language)["translatedText"]
                         except:
                             logger.error("\"google-translate\" Error while translating \"%s\" from \"%s\" into \"%s\"", source_text, source_language, destination_language)
                             raise
@@ -322,3 +326,9 @@ class Messaging(yaz.BasePlugin):
         """
         assert isinstance(filename, str), type(filename)
         return re.match(r"(.*/)?(?P<filename>(?P<domain>\w+)[.](?P<language>\w{2}(_\w{2})?)[.](?P<extension>yml|yaml))$", filename)
+
+    def init_google_translator(self):
+        """Ensure that we only initialize the translator once"""
+        if self.translator is None:
+            self.translator = google.cloud.translate_v2.Client()
+        return self.translator

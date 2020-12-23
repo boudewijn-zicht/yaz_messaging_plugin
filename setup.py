@@ -27,7 +27,7 @@ setuptools.setup(
     url="http://github.com/yaz/yaz_messaging_plugin",
     license="MIT",
     zip_safe=False,
-    install_requires=["yaz", "pyyaml", "googletrans"],
+    install_requires=["yaz", "pyyaml", "google-cloud-translate"],
     scripts=["bin/yaz-messaging"],
     test_suite="nose.collector",
     tests_require=["nose"],
@@ -35,6 +35,5 @@ setuptools.setup(
         "Development Status :: 4 - Beta",
         "Environment :: Console",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6"
     ])

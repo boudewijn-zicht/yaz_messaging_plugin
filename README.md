@@ -7,36 +7,41 @@ TODO: Short description here
 sudo pip3 install yaz_messaging_plugin
 ```
 
-## From source
-```sh
-git clone git@github.com:yaz/yaz_messaging_plugin.git
-cd yaz_messaging_plugin
-python3 setup.py install
-```
+## Configure google translate
+1. Make a file and store the google credentials,
+   see https://cloud.google.com/translate/docs/setup
+2. Export the key using
+   `export GOOGLE_APPLICATION_CREDENTIALS=/home/user/my-key.json`
 
-## From source (for development, with virtualenv)
-```sh
-# skip this step if you have a python3.5 (or higher) environment
-sudo apt-get install libssl-dev
-cd $HOME/local
-git clone https://github.com/python/cpython.git
-cd cpython
-./configure --prefix=$HOME/local
-make install
-
-# get yaz
+# Developing
+```bash
+# Get the code
 git clone git@github.com:boudewijn-zicht/yaz_messaging_plugin.git
 cd yaz_messaging_plugin
 
-# skip this step if you have a python3.5 (or higher) environment
-# create and activate your python3.5 (or higher) virtual env
-virtualenv --python=python3.5 env
-source env/bin/activate
-# run deactivate to exit the virtualenv
+# Ensure you have python 3.6 or higher and yaz installed
+python3 --version
 
-# run tests
-make test
+# Setup your virtual environment
+virtualenv --python=python3 env
+source env/bin/activate
+pip install --upgrade yaz pyyml google-cloud-translate
+# python setup.py develop
+
+# Run yaz-messaging
+./bin/yaz-messaging version --verbose
+
+# Run tests
+python test
+
+# Upload a new release to pypi
+# Remember to update the version number in ./version.py
+python setup.py tag
+python setup.py publish
+
+# Once you are done... exit your virtual environment
+deactivate
 ```
 
-# Maintainer(s)
+# Maintainer
 - Boudewijn Schoon <boudewijn@zicht.nl>

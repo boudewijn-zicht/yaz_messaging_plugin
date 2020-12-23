@@ -32,3 +32,7 @@
 # 1.1.2
 - Will now also look in `"src/Resources/translations/"` for potential
   translation files
+
+# 1.2.0
+- Now using `google-cloud-translate` library instead of `googletrans` to circumvent
+  the security token issue.  Note that this requires a valid configured key
